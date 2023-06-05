@@ -1,0 +1,65 @@
+//set the value of MODE flag in PrTE(Entry 9) to the system call numm of write() i.e. 5
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 5;
+
+//store the value of user sp
+alias userSP R0;
+userSP = SP;
+
+//switch to kernel stack
+
+//Save the value of SP in the user SP field of Process Table entry of the process.
+[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16 + 13)] = SP; 
+
+//Set the value of SP to beginning of the kernel stack.
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16 + 11)] * 512 - 1;
+
+//The stack is:
+// 0. ip+2
+// 1. ret_value (Push any register, say R0 to allocate space for the return value.)
+// 2. arg3 (As we do not have a third argument in this case, push any register, say R0 on to the stack. (In this case the last argument will be ignored by the system call handler.) )
+// 3. arg2 (Argument 2 is the word which has to be written to the terminal)
+// 4. arg1 (Argument 1 is the file descriptor which is -2 for the terminal.)
+// 5. sys_call_num
+// 6. regs in use
+
+//First we have to access argument 1 which is file descriptor to check whether it is valid or not. 
+// Manually translate the logical of the file desc
+
+alias physicalPageNum R1;
+alias offset R2;
+alias fileDescPhysicalAddr R3;
+
+// accessing the physical page number to access the arguement1
+physicalPageNum = [PTBR + 2 * ((userSP - 4)/ 512)];
+offset = (userSP - 4) % 512;
+fileDescPhysicalAddr = (physicalPageNum * 512) + offset;
+
+alias fileDescriptor R4;
+fileDescriptor=[fileDescPhysicalAddr];
+
+//If the file descriptor is not equal to -2, store -1 as a return value.
+if (fileDescriptor != -2)
+then
+    // setting the interruptReturnValue to -1
+    alias physicalAddrRetVal R5;
+    physicalAddrRetVal = ([PTBR + 2 * ((userSP - 1) / 512)] * 512) + ((userSP - 1) % 512);
+    [physicalAddrRetVal] = -1;
+else
+    // accessing the number from stack and printing it
+    alias word R5;
+    word = [[PTBR + 2 * ((userSP - 3) / 512)] * 512 + ((userSP - 3) % 512)];
+    print word;
+
+    // settting the interruptReturnValue to 0
+    alias physicalAddrRetVal R6;
+    physicalAddrRetVal = ([PTBR + 2 * (userSP - 1)/ 512] * 512) + ((userSP - 1) % 512);
+    [physicalAddrRetVal] = 0;
+endif;
+
+//Outside the else block, set back the value of SP to point to top of user stack.
+SP=userSP;
+
+//Reset the MODE FLAG field in the process table to 0. Value 0 indicates that process is running in user mode
+[PROCESS_TABLE+([SYSTEM_STATUS_TABLE+1]*16)+9]=0;
+
+ireturn;
