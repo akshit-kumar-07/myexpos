@@ -1,0 +1,21 @@
+//S_S_T stores System Status table and it's secnd word contains the pid of the current process
+// Each entry in the Process Table is 16 words long
+// the 13th word of a PrTE contains the USP
+//Store the current VA of stack into that
+
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;
+
+// Setting SP to UArea Page number * 512 - 1
+//Kernel Stack Setup
+// The 11th word contains the UAPN field
+
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;
+backup;
+
+alias x R0;
+x=[SYSTEM_STATUS_TABLE + 1];
+print x;
+
+restore;
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE+1]*16)+13];
+ireturn;
