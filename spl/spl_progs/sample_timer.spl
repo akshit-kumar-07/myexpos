@@ -1,0 +1,73 @@
+breakpoint;
+//S_S_T stores System Status table and it's secnd word contains the pid of the current process
+// Each entry in the Process Table is 16 words long
+// the 13th word of a PrTE contains the USP
+//Store the current VA of stack into that
+
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;
+
+// Setting SP to UArea Page number * 512 - 1
+//Kernel Stack Setup
+// The 11th word contains the UAPN field
+
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;
+backup;
+
+alias currentPID R0;
+currentPID = [SYSTEM_STATUS_TABLE+1];
+
+//The Process table entry of the current process can be computed as PROCESS_TABLE + currentPID*16.
+
+alias process_table_entry R1;
+process_table_entry = PROCESS_TABLE + currentPID * 16;
+
+//Save the KPTR, PTBR and PTLR values to the Process Table entry of the current process.
+
+[process_table_entry + 12] = SP % 512;
+[process_table_entry + 14] = PTBR;
+[process_table_entry + 15] = PTLR;
+
+//Set the state of the process as READY.
+
+[process_table_entry + 4] = READY;
+
+//As we have only two processes to schedule, the scheduling algorithm we are going to use will just toggle between the two processes
+
+alias newPID R2;
+if(currentPID == 0) then
+	newPID = 1;
+else
+	newPID = 0;
+endif;
+
+//Restore the SP, PTBR and PTLR values from the Process Table entry for the new process.
+
+alias new_process_table R3;
+new_process_table = PROCESS_TABLE + newPID * 16;
+
+//Set back Kernel SP, PTBR , PTLR
+
+SP =  [new_process_table + 11] * 512 + [new_process_table + 12] ;
+PTBR = [new_process_table + 14];
+PTLR = [new_process_table + 15];
+
+//Set the PID field of the System Status Table as newPID.
+
+[SYSTEM_STATUS_TABLE + 1] = newPID;
+
+//Check if the newly found process is in CREATED state. If so, set SP to top of its user stack and return to user mode.
+
+if([new_process_table + 4] == CREATED) then
+	[new_process_table + 4] = RUNNING;
+	SP = [new_process_table + 13];
+	ireturn;
+endif;
+
+//Set the state of the newly found process as RUNNING.
+
+[new_process_table + 4] = RUNNING;
+
+restore;
+SP=[PROCESS_TABLE + ([SYSTEM_STATUS_TABLE+1]*16) +13];
+breakpoint;
+ireturn;
