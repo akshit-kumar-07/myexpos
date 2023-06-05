@@ -1,0 +1,8 @@
+alias x R0;
+x=1;
+while(x<=20) do
+	alias y R1;
+	y=x*x*x;
+	x=x+1;
+	print y;
+endwhile;
