@@ -1,0 +1,66 @@
+alias PID R0;
+PID=[SYSTEM_STATUS_TABLE+1];
+multipush(BP);
+
+alias PTE R1;
+PTE=PROCESS_TABLE+(16*PID);
+
+[PTE+12]=SP%512;
+[PTE+14]=PTBR;
+[PTE+15]=PTLR;
+
+alias i R2;
+alias newPID R3;
+
+
+
+i=PID+1;
+newPID=0;
+
+
+while(i<=16)
+do
+	//Implementiing a circular queue for Round Robin
+	if(i>15)
+	then
+		i=0;
+	endif;
+	
+	alias curPID R4;
+	curPID=PROCESS_TABLE+i*16;
+	if([curPID+4]==CREATED || [curPID+4]==READY)
+	then
+		newPID=i;
+		break;
+	endif;
+	i=i+1;
+endwhile;
+
+if(i==PID)
+then
+	newPID=0;
+endif;
+
+//alias UAPN R5;
+//alias KSP R6;
+
+//UAPN=[PROCESS_TABLE+(newPID*16 + 11)];
+//KSP=[PROCESS_TABLE+(newPID*16 + 12)];
+
+SP=[PROCESS_TABLE+(newPID*16 + 11)]*512+[PROCESS_TABLE+(newPID*16 + 12)];
+PTBR=[PROCESS_TABLE+(newPID*16 + 14)];
+PTLR=10;
+
+[SYSTEM_STATUS_TABLE+1]=newPID;
+
+if([PROCESS_TABLE+(newPID*16 + 4)]==CREATED)
+then
+	SP=[PROCESS_TABLE+(newPID*16 + 13)];
+	[PROCESS_TABLE+(newPID*16 + 4)]=RUNNING;
+	[PROCESS_TABLE+(newPID*16 + 9)]=0;
+	ireturn;
+endif;
+
+[PROCESS_TABLE+(newPID*16 + 4)]=RUNNING;
+multipop(BP);
+return;

@@ -1,0 +1,134 @@
+//SCHEDULER MODULE
+loadi(50,63);
+loadi(51,64);
+
+//load the exec file
+loadi(83,18);
+
+//load idle process
+loadi(69,11);
+loadi(70,12);
+
+//INT 10 ROUTINE
+loadi(16,29);
+loadi(17,30);
+
+//TIMER-INTERRUPT ROUTINE
+loadi(4, 17);
+loadi(5, 18);
+
+//LIBRARY 
+loadi(63,13);
+loadi(64,14);
+
+//INIT
+loadi(65,7);
+loadi(66,8);
+
+//INT 10 ROUTINE
+loadi(22,35);
+loadi(23,36);
+
+//EXCEPTION HANDLER
+loadi(2,15);
+loadi(3,16);
+
+//initializing all the other processes as terminated
+
+alias counter R0;
+counter=3;
+while(counter<16)
+do
+	[PROCESS_TABLE+(16*counter)+4]=TERMINATED;
+	counter=counter+1;
+endwhile;
+
+//////////////////////////////////////// EVEN PROCESS /////////////////////////////////////////
+
+//setting the page table for the EVEN process
+
+//Library
+[PAGE_TABLE_BASE+40] = 63;
+[PAGE_TABLE_BASE+41] = "0100";
+[PAGE_TABLE_BASE+42] = 64;
+[PAGE_TABLE_BASE+43] = "0100";
+
+//Heap
+[PAGE_TABLE_BASE+44] = 85;
+[PAGE_TABLE_BASE+45] = "0110";
+[PAGE_TABLE_BASE+46] = 86;
+[PAGE_TABLE_BASE+47] = "0110";
+
+//Code
+[PAGE_TABLE_BASE+48] = 83;
+[PAGE_TABLE_BASE+49] = "0100";
+[PAGE_TABLE_BASE+50] = 84;
+[PAGE_TABLE_BASE+51] = "0100";
+[PAGE_TABLE_BASE+52] = -1;
+[PAGE_TABLE_BASE+53] = "0000";
+[PAGE_TABLE_BASE+54] = -1;
+[PAGE_TABLE_BASE+55] = "0000";
+
+//Stack
+[PAGE_TABLE_BASE+56] = 87;
+[PAGE_TABLE_BASE+57] = "0110";
+[PAGE_TABLE_BASE+58] = 88;
+[PAGE_TABLE_BASE+59] = "0110";
+
+//setting the process table for EVEN
+
+[PROCESS_TABLE+32+1]=2;
+[PROCESS_TABLE+32+4]=CREATED;
+[PROCESS_TABLE+32+11]=89;
+[PROCESS_TABLE+32+12]=0;
+[PROCESS_TABLE+32+13]=8*512;
+[PROCESS_TABLE+32+14]=PAGE_TABLE_BASE+40;
+[PROCESS_TABLE+32+15]=10;
+
+[87*512]=[83*512+1];
+
+//////////////////////////////////////// INIT PROCESS /////////////////////////////////////////
+
+//setting the page table for the INIT process
+
+//Library
+[PAGE_TABLE_BASE+20] = 63;
+[PAGE_TABLE_BASE+21] = "0100";
+[PAGE_TABLE_BASE+22] = 64;
+[PAGE_TABLE_BASE+23] = "0100";
+
+//Heap
+[PAGE_TABLE_BASE+24] = 78;
+[PAGE_TABLE_BASE+25] = "0110";
+[PAGE_TABLE_BASE+26] = 79;
+[PAGE_TABLE_BASE+27] = "0110";
+
+//Code
+[PAGE_TABLE_BASE+28] = 65;
+[PAGE_TABLE_BASE+29] = "0100";
+[PAGE_TABLE_BASE+30] = 66;
+[PAGE_TABLE_BASE+31] = "0100";
+[PAGE_TABLE_BASE+32] = -1;
+[PAGE_TABLE_BASE+33] = "0000";
+[PAGE_TABLE_BASE+34] = -1;
+[PAGE_TABLE_BASE+35] = "0000";
+
+//Stack
+[PAGE_TABLE_BASE+36] = 76;
+[PAGE_TABLE_BASE+37] = "0110";
+[PAGE_TABLE_BASE+38] = 77;
+[PAGE_TABLE_BASE+39] = "0110";
+
+
+//setting the process table for init
+
+[PROCESS_TABLE+17]=1;
+[PROCESS_TABLE+20]=CREATED;
+[PROCESS_TABLE+27]=80;
+[PROCESS_TABLE+16+12]=0;
+[PROCESS_TABLE+16+13]=8*512;
+[PROCESS_TABLE+16+14]=PAGE_TABLE_BASE+20;
+[PROCESS_TABLE+16+15]=10;
+
+[76*512] = [65 * 512 + 1];//since first page loaded is 65 and the 2nd word in it contains the entry point.
+return;
