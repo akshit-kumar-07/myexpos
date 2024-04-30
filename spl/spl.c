@@ -1436,8 +1436,7 @@ void codegen(node *root)
 
 int main(int argc, char **argv)
 {
-    char filename[FILENAME_MAX_LEN], op_name[FILENAME_MAX_LEN];
-    int ch;
+    char filename[FILENAME_MAX_LEN], op_name[FILENAME_MAX_LEN], ch;
     FILE *input_fp;
 
     strcpy(filename, argv[1]);
