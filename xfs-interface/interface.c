@@ -22,7 +22,7 @@ jmp_buf exp_point;
 void cli(int argc, char **argv)
 {
     int i, j;
-    char command[100], temp[100], c;
+    char command[100], c;
 
     if (argc > 1)
     {
@@ -31,8 +31,7 @@ void cli(int argc, char **argv)
         i = 2;
         while (i < argc)
         {
-            strcpy(temp, command);
-            sprintf(command, "%s %s", temp, argv[i]);
+            sprintf(command, "%s %s", command, argv[i]);
             i++;
         }
 
@@ -561,31 +560,7 @@ int main(int argc, char **argv)
 
     disk_init();
 
-    const char* disk_file = DEFAULT_DISK_NAME;
-
-    if(argc>1 && strcmp(argv[1], "--disk-file")==0)
-    {
-        argc --;
-        argv ++;
-        if(argc>1)
-        {
-            disk_file = argv[1];
-            argc --;
-            argv ++;
-        }
-        else
-        {
-            printf("--disk-file option requires a file name.\n");
-            printf("\n");
-            printf("Syntax: --disk-file /path/to/disk.xfs\n");
-            printf("Specifies the path to disk.xfs to use.\n");
-            exit(-1);
-        }
-    }
-
-    setPathToDisk(disk_file);
-
-    fd = open(disk_file, O_RDONLY, 0666);
+    fd = open(DISK_NAME, O_RDONLY, 0666);
     if (fd > 0)
     {
         close(fd);
